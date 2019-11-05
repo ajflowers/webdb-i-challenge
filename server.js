@@ -21,7 +21,7 @@ server.get('/accounts', (req, res) => {
         });
 });
 
-server.get('/accounts/:id', (req, res) => {
+server.get('/accounts/:id', validateAcct, (req, res) => {
     db.select('*').from('accounts').where({ id: req.params.id })
         .then(acct => {
             res.status(200).json(acct);
@@ -45,7 +45,7 @@ server.post('/accounts', (req, res) => {
         });
 });
 
-server.put('/accounts/:id', (req, res) => {
+server.put('/accounts/:id', validateAcct, (req, res) => {
     db('accounts')
         .where({ id: req.params.id })
         .update(req.body)
@@ -58,7 +58,7 @@ server.put('/accounts/:id', (req, res) => {
         });
 });
 
-server.delete('/accounts/:id', (req, res) => {
+server.delete('/accounts/:id', validateAcct, (req, res) => {
     db('accounts')
         .where({ id: req.params.id })
         .del()
@@ -69,8 +69,22 @@ server.delete('/accounts/:id', (req, res) => {
             console.log(err);
             res.status(500).json({ error: 'failed to delete account from db' });
         });
+});
 
-})
+function validateAcct(req, res, next) {
+    db.select('*').from('accounts').where({ id: req.params.id })
+        .then(results => {
+            if (results.length) {
+                next()
+            } else {
+                res.status(404).json({ message: `could not locate account with ID ${req.params.id}`});
+            }
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json({ message: `error while attempting to validate account ID ${req.params.id}` })
+        });
+};
 
 
 module.exports = server;
