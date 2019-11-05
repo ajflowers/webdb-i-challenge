@@ -11,14 +11,37 @@ server.get('/', (req, res) => {
 });
 
 server.get('/accounts', (req, res) => {
-    db.select('*').from('accounts')
-        .then(accts => {
-            res.status(200).json(accts);
-        })
-        .catch(err => {
-            console.log(err);
-            res.status(500).json({ error: 'failed to get accounts from db' })
-        });
+    // db.select('*').from('accounts')
+    const query = db('accounts').select();
+
+    if (req.query.sortby && req.query.sortdir) {
+        query.orderBy(req.query.sortby, req.query.sortdir);
+    } else if (req.query.sortby) {
+        query.orderBy(req.query.sortby);
+    }
+
+    if (req.query.limit) {
+        query.limit(req.query.limit);
+    }
+
+    query.then(accts => {
+        res.status(200).json(accts);
+    })
+    .catch(err => {
+        console.log(err);
+        res.status(500).json({ error: 'failed to get accounts from db' })
+    });
+
+
+
+
+        // .then(accts => {
+        //     res.status(200).json(accts);
+        // })
+        // .catch(err => {
+        //     console.log(err);
+        //     res.status(500).json({ error: 'failed to get accounts from db' })
+        // });
 });
 
 server.get('/accounts/:id', validateAcct, (req, res) => {
